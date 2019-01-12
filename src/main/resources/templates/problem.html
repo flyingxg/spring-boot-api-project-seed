@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,target-densitydpi=medium-dpi,initial-scale=1, maximum-scale=1">
+        <title></title>
+    </head>
+	<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
+	<script src="https://cdn.bootcss.com/twitter-bootstrap/4.2.1/js/bootstrap.js"></script>
+	<link href="https://cdn.bootcss.com/twitter-bootstrap/4.2.1/css/bootstrap.css" rel="stylesheet">
+	<script src="https://cdn.bootcss.com/vue/2.5.21/vue.js"></script>
+	<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <style type="text/css">
+       .you {
+        position: relative;
+		width: 80%;
+        min-height: 50px;
+        background: #25a23b;
+        border-radius: 5px;
+        line-height: 50px;
+        margin-left: 10px;
+        word-break: break-word;
+        color: white;
+        padding: 5px;
+        line-height: 18px;
+    }
+	.me {
+		top: 50px;
+		float: right;
+	width: 80%;
+	right: 10px;
+	min-height: 50px;
+	background:#F0AD4E;
+	border-radius: 5px;
+	line-height: 50px;
+	margin-right: 10px;
+	word-break: break-word;
+	color: white;
+	padding: 5px;
+	line-height: 18px;
+}
+    </style>
+    <body>
+		<div class="fixed-bottom" style="background: #ffffff;width: 100%;">
+			<input type="text" placeholder="在此输入问题" id="problem" style="width: 70%;"/>
+			<button style="width: 20%;" type="button" class="button button-primary button-rounded button-small"  onclick="p()">发送</button>
+		</div>
+		<div id="app" style="padding-bottom: 50px">
+			<div style="width: 100%;padding-top: 100px;" v-for="item in items">
+			  <p v-bind:class="[item.type == 1 ? 'me' : 'you']" >
+					{{ item.message }}
+				</p>
+
+			</div>
+
+		</div>
+		<div style="height: 20px;padding-top: 20px"></div>
+	
+    </body>
+	<script type="text/javascript">
+        $.post("/message/list",
+            function(data){
+                for(var i of data.data.list){
+                    console.log(i)
+                    example1.items.push({ message: i.problem,type:1 })
+                    if(typeof (JSON.parse(i.answer).data.nli[0].data_obj) != "undefined" && typeof (JSON.parse(i.answer).data.nli[0].data_obj[0].description) != "undefined"){
+                        example1.items.push({ message: JSON.parse(i.answer).data.nli[0].desc_obj.result + JSON.parse(i.answer).data.nli[0].data_obj[0].description,type:2 })
+                    }else {
+                        example1.items.push({ message: JSON.parse(i.answer).data.nli[0].desc_obj.result,type:2 })
+                    }
+				}
+
+                var t=setTimeout("scrollToBottom()",2000);
+
+            }, "json");
+		var example1 = new Vue({
+		  el: '#app',
+		  data: {
+			items: [
+			]
+		  },
+            watch: {
+                items: function (val) {
+                    scrollToBottom()
+                }
+            }
+		})
+		function p(){
+            example1.items.push({ message: $("#problem").val(),type:1 })
+            $.post("/message/getAns", {
+                    "problem":$("#problem").val()},
+                function(data){
+                    if(typeof (JSON.parse(data).data.nli[0].data_obj) != "undefined" && typeof (JSON.parse(data).data.nli[0].data_obj[0].description) != "undefined"){
+                    example1.items.push({ message: JSON.parse(data).data.nli[0].desc_obj.result + JSON.parse(data).data.nli[0].data_obj[0].description,type:2 })
+				}else {
+                    example1.items.push({ message: JSON.parse(data).data.nli[0].desc_obj.result,type:2 })
+				}
+                    console.log(JSON.parse(data))
+                    var t=setTimeout("scrollToBottom()",1500);
+                }, "json");
+
+		}
+        function scrollToBottom() {
+		    console.log(12312)
+            $("html, body").animate({ scrollTop: $(document).height() - $(window).height() }, 200);
+        }
+	</script>
+</html>
